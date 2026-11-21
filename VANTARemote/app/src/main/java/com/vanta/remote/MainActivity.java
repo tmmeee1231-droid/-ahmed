@@ -1,6 +1,10 @@
 package com.vanta.remote;
 
 import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -28,6 +32,8 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -53,6 +59,7 @@ public final class MainActivity extends Activity {
     private VideoSource videoSource;
     private VideoTrack localVideo;
     private boolean peerReady;
+    private final List<IceCandidate> pendingIceCandidates = new ArrayList<>();
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
@@ -73,30 +80,61 @@ public final class MainActivity extends Activity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setGravity(Gravity.CENTER_HORIZONTAL);
-        root.setPadding(24, 32, 24, 24);
-        root.setBackgroundColor(0xFF10131A);
+        root.setPadding(22, 26, 22, 22);
+        root.setBackground(new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+            new int[]{0xFF050507, 0xFF18070D, 0xFF08090D}));
+
+        TextView sigil = new TextView(this);
+        sigil.setText("☠");
+        sigil.setTextColor(0xFFFF243F);
+        sigil.setTextSize(34);
+        sigil.setGravity(Gravity.CENTER);
+        root.addView(sigil, matchWrap());
 
         TextView title = new TextView(this);
-        title.setText("VANTA Remote");
-        title.setTextColor(0xFFFFFFFF);
-        title.setTextSize(27);
+        title.setText("MANW 😈💪");
+        title.setTextColor(0xFFFF2948);
+        title.setTextSize(30);
+        title.setTypeface(Typeface.create("sans-serif-black", Typeface.BOLD));
+        title.setLetterSpacing(0.12f);
         title.setGravity(Gravity.CENTER);
         root.addView(title, matchWrap());
 
+        TextView subtitle = new TextView(this);
+        subtitle.setText("V A N T A   //   REMOTE ACCESS");
+        subtitle.setTextColor(0xFFB8A0A8);
+        subtitle.setTextSize(11);
+        subtitle.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams sub = matchWrap(); sub.topMargin = 3;
+        root.addView(subtitle, sub);
+
         status = new TextView(this);
-        status.setText("الحالة: غير متصل");
-        status.setTextColor(0xFFFFFFFF);
-        status.setTextSize(15);
+        status.setText("●  غير متصل");
+        status.setTextColor(0xFFFFA4B2);
+        status.setTextSize(14);
         status.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams st = matchWrap(); st.topMargin = 14;
+        status.setPadding(12, 12, 12, 12);
+        status.setBackground(roundBg(0xFF211018, 0xFF6D1B32, 18));
+        LinearLayout.LayoutParams st = matchWrap(); st.topMargin = 20;
         root.addView(status, st);
+
+        TextView codeLabel = new TextView(this);
+        codeLabel.setText("رمز الربط");
+        codeLabel.setTextColor(0xFFD4AAB3);
+        codeLabel.setTextSize(12);
+        codeLabel.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams cl = matchWrap(); cl.topMargin = 16;
+        root.addView(codeLabel, cl);
 
         codeView = new TextView(this);
         codeView.setText("------");
-        codeView.setTextColor(0xFF79D6FF);
-        codeView.setTextSize(28);
+        codeView.setTextColor(0xFFFF3655);
+        codeView.setTextSize(31);
+        codeView.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
         codeView.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams cp = matchWrap(); cp.topMargin = 8;
+        codeView.setPadding(12, 8, 12, 8);
+        codeView.setBackground(roundBg(0xFF100B10, 0xFF9B203B, 14));
+        LinearLayout.LayoutParams cp = matchWrap(); cp.topMargin = 6;
         root.addView(codeView, cp);
 
         remoteView = new SurfaceViewRenderer(this);
@@ -116,21 +154,28 @@ public final class MainActivity extends Activity {
             return true;
         });
 
-        Button create = button("إنشاء رمز ربط", root, () -> connectWithCode(generateCode()));
-        Button join = button("إدخال رمز جهاز آخر", root, this::showJoinDialog);
-        button("مشاركة شاشتي (بموافقتي)", root, this::requestScreenCapture);
-        button("تفعيل التحكم على هذا الجهاز", root, () -> startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
+        button("☠  إنشاء رمز ربط", root, () -> connectWithCode(generateCode()));
+        button("⌁  إدخال رمز الجهاز الآخر", root, this::showJoinDialog);
+        button("◉  مشاركة شاشتي بموافقتي", root, this::requestScreenCapture);
+        button("⚙  تفعيل التحكم على هذا الجهاز", root, () -> startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
         button("نسخ رمز الربط", root, this::copyCode);
-        button("إيقاف الاتصال", root, this::disconnect);
+        button("✕  إيقاف الاتصال", root, this::disconnect);
 
         TextView note = new TextView(this);
-        note.setText("مشاركة الشاشة لا تبدأ إلا بعد موافقة أندرويد. التحكم باللمس يتطلب تفعيل خدمة VANTA يدويًا من إعدادات إمكانية الوصول على الجهاز المستقبِل للتحكم.");
-        note.setTextColor(0xFFB8C2D1);
-        note.setTextSize(12);
+        note.setText("مشاركة الشاشة تتطلب موافقتك من أندرويد. التحكم يتطلب تفعيل خدمة VANTA يدويًا من إعدادات إمكانية الوصول.");
+        note.setTextColor(0xFFBFAAB0);
+        note.setTextSize(11);
         note.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams np = matchWrap(); np.topMargin = 12;
+        LinearLayout.LayoutParams np = matchWrap(); np.topMargin = 14;
         root.addView(note, np);
         setContentView(root);
+    }
+
+    private GradientDrawable roundBg(int fill, int stroke, int radius) {
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(fill); bg.setCornerRadius(radius);
+        bg.setStroke(1, stroke);
+        return bg;
     }
 
     private Button button(String label, LinearLayout root, Runnable action) {
@@ -193,6 +238,7 @@ public final class MainActivity extends Activity {
 
     private void createPeerConnection() {
         closePeer();
+        pendingIceCandidates.clear();
         PeerConnection.RTCConfiguration config = new PeerConnection.RTCConfiguration(Collections.singletonList(
             PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()));
         config.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
@@ -248,11 +294,21 @@ public final class MainActivity extends Activity {
             SurfaceTextureHelper helper = SurfaceTextureHelper.create("VANTA-ScreenCapture", eglBase.getEglBaseContext());
             videoSource = factory.createVideoSource(true);
             screenCapturer.initialize(helper, getApplicationContext(), videoSource.getCapturerObserver());
-            screenCapturer.startCapture(1280, 720, 15);
-            localVideo = factory.createVideoTrack("vanta-screen", videoSource);
-            peer.addTrack(localVideo, Arrays.asList("vanta-stream"));
-            createOffer();
-            setStatus("بدأت مشاركة الشاشة بعد موافقتك");
+            Intent projectionService = new Intent(this, VantaProjectionService.class);
+            projectionService.putExtra("resultCode", resultCode);
+            projectionService.putExtra("data", data);
+            if (android.os.Build.VERSION.SDK_INT >= 26) startForegroundService(projectionService);
+            else startService(projectionService);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    if (screenCapturer == null || peer == null) return;
+                    screenCapturer.startCapture(1280, 720, 15);
+                    localVideo = factory.createVideoTrack("vanta-screen", videoSource);
+                    peer.addTrack(localVideo, Arrays.asList("vanta-stream"));
+                    createOffer();
+                    setStatus("مشاركة الشاشة بدأت");
+                } catch (Exception ex) { setStatus("تعذر بدء مشاركة الشاشة: " + ex.getMessage()); }
+            }, 700);
         } catch (Exception e) { setStatus("تعذر بدء مشاركة الشاشة: " + e.getMessage()); }
     }
 
@@ -274,6 +330,7 @@ public final class MainActivity extends Activity {
         SessionDescription offer = new SessionDescription(SessionDescription.Type.fromCanonicalForm(p.optString("type", "offer")), p.optString("sdp"));
         peer.setRemoteDescription(new SimpleSdpObserver() {
             @Override public void onSetSuccess() {
+                flushPendingIceCandidates();
                 peer.createAnswer(new SimpleSdpObserver() {
                     @Override public void onCreateSuccess(SessionDescription answer) {
                         peer.setLocalDescription(new SimpleSdpObserver() {
@@ -291,12 +348,20 @@ public final class MainActivity extends Activity {
     private void receiveAnswer(JSONObject p) {
         if (p == null || peer == null) return;
         SessionDescription answer = new SessionDescription(SessionDescription.Type.fromCanonicalForm(p.optString("type", "answer")), p.optString("sdp"));
-        peer.setRemoteDescription(new SimpleSdpObserver(), answer);
+        peer.setRemoteDescription(new SimpleSdpObserver() { @Override public void onSetSuccess() { flushPendingIceCandidates(); } }, answer);
     }
 
     private void receiveIce(JSONObject p) {
         if (p == null || peer == null) return;
-        peer.addIceCandidate(new IceCandidate(p.optString("sdpMid"), p.optInt("sdpMLineIndex"), p.optString("sdp")));
+        IceCandidate candidate = new IceCandidate(p.optString("sdpMid"), p.optInt("sdpMLineIndex"), p.optString("sdp"));
+        if (peer.getRemoteDescription() == null) pendingIceCandidates.add(candidate);
+        else peer.addIceCandidate(candidate);
+    }
+
+    private void flushPendingIceCandidates() {
+        if (peer == null || peer.getRemoteDescription() == null) return;
+        for (IceCandidate candidate : pendingIceCandidates) peer.addIceCandidate(candidate);
+        pendingIceCandidates.clear();
     }
 
     private void sendSignal(String type, JSONObject payload) {
@@ -354,6 +419,8 @@ public final class MainActivity extends Activity {
         if (videoSource != null) { videoSource.dispose(); videoSource = null; }
         if (controlChannel != null) { controlChannel.close(); controlChannel.dispose(); controlChannel = null; }
         if (peer != null) { peer.close(); peer.dispose(); peer = null; }
+        pendingIceCandidates.clear();
+        stopService(new Intent(this, VantaProjectionService.class));
     }
 
     private void setStatus(String s) { runOnUiThread(() -> { if (status != null) status.setText("الحالة: " + s); }); }
