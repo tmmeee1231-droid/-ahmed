@@ -288,17 +288,23 @@ public final class MainActivity extends Activity {
         if (requestCode != CAPTURE_REQUEST) return;
         if (resultCode != RESULT_OK || data == null) { setStatus("تم رفض إذن مشاركة الشاشة"); return; }
         try {
-            screenCapturer = new ScreenCapturerAndroid(data, new MediaProjection.Callback() {
-                @Override public void onStop() { runOnUiThread(() -> setStatus("توقفت مشاركة الشاشة")); }
-            });
-            SurfaceTextureHelper helper = SurfaceTextureHelper.create("VANTA-ScreenCapture", eglBase.getEglBaseContext());
-            videoSource = factory.createVideoSource(true);
-            screenCapturer.initialize(helper, getApplicationContext(), videoSource.getCapturerObserver());
             Intent projectionService = new Intent(this, VantaProjectionService.class);
             projectionService.putExtra("resultCode", resultCode);
             projectionService.putExtra("data", data);
             if (android.os.Build.VERSION.SDK_INT >= 26) startForegroundService(projectionService);
             else startService(projectionService);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    screenCapturer = new ScreenCapturerAndroid(data, new MediaProjection.Callback() {
+                        @Override public void onStop() { runOnUiThread(() -> setStatus("توقفت مشاركة الشاشة")); }
+                    });
+                    SurfaceTextureHelper helper = SurfaceTextureHelper.create("VANTA-ScreenCapture", eglBase.getEglBaseContext());
+                    videoSource = factory.createVideoSource(true);
+                    screenCapturer.initialize(helper, getApplicationContext(), videoSource.getCapturerObserver());
+                } catch (Exception captureError) {
+                    setStatus("تعذر تهيئة تصوير الشاشة: " + captureError.getMessage());
+                }
+            }, 350);
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 try {
                     if (screenCapturer == null || peer == null) return;
