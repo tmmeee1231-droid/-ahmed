@@ -58,6 +58,7 @@ public final class MainActivity extends Activity {
     private ScreenCapturerAndroid screenCapturer;
     private VideoSource videoSource;
     private VideoTrack localVideo;
+    private SurfaceTextureHelper captureHelper;
     private boolean peerReady;
     private final List<IceCandidate> pendingIceCandidates = new ArrayList<>();
 
@@ -157,7 +158,7 @@ public final class MainActivity extends Activity {
         button("☠  إنشاء رمز ربط", root, () -> connectWithCode(generateCode()));
         button("⌁  إدخال رمز الجهاز الآخر", root, this::showJoinDialog);
         button("◉  مشاركة شاشتي بموافقتي", root, this::requestScreenCapture);
-        button("⚙  تفعيل التحكم على هذا الجهاز", root, () -> startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
+        button("⚙  تفعيل التحكم على هذا الجهاز", root, this::ensureAccessibilityEnabled);
         button("نسخ رمز الربط", root, this::copyCode);
         button("✕  إيقاف الاتصال", root, this::disconnect);
 
@@ -181,6 +182,37 @@ public final class MainActivity extends Activity {
     private Button button(String label, LinearLayout root, Runnable action) {
         Button b = new Button(this); b.setText(label); b.setOnClickListener(v -> action.run());
         LinearLayout.LayoutParams p = matchWrap(); p.topMargin = 7; root.addView(b, p); return b;
+    }
+
+    private boolean isVantaAccessibilityEnabled() {
+        String enabled = Settings.Secure.getString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+        if (enabled == null) return false;
+        String expected = new android.content.ComponentName(this, VantaAccessibilityService.class).flattenToString();
+        for (String item : enabled.split(":")) {
+            if (expected.equalsIgnoreCase(item)) return true;
+        }
+        return false;
+    }
+
+    private void ensureAccessibilityEnabled() {
+        if (isVantaAccessibilityEnabled() && VantaAccessibilityService.getInstance() != null) {
+            new AlertDialog.Builder(this)
+                .setTitle("التحكم مفعّل")
+                .setMessage("خدمة VANTA شغالة بالفعل على هذا الجهاز. ارجع للتطبيق واستخدم الجهاز الآخر للتحكم.")
+                .setPositiveButton("تمام", null)
+                .show();
+            return;
+        }
+        if (isVantaAccessibilityEnabled()) {
+            new AlertDialog.Builder(this)
+                .setTitle("الخدمة بتتصل")
+                .setMessage("أندرويد مفعّل الخدمة، لكن لسه ما ربطهاش بالتطبيق. اقفل وافتح التطبيق مرة واحدة. لو استمرت المشكلة افتح إعدادات إمكانية الوصول وتأكد أن VANTA ما زالت مفعّلة.")
+                .setPositiveButton("فتح الإعدادات", (d, w) -> startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)))
+                .setNegativeButton("إلغاء", null)
+                .show();
+            return;
+        }
+        startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
     }
 
     private void showJoinDialog() {
@@ -286,36 +318,63 @@ public final class MainActivity extends Activity {
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode != CAPTURE_REQUEST) return;
-        if (resultCode != RESULT_OK || data == null) { setStatus("تم رفض إذن مشاركة الشاشة"); return; }
+        if (resultCode != RESULT_OK || data == null) {
+            setStatus("تم رفض إذن مشاركة الشاشة");
+            return;
+        }
+        if (peer == null || !peerReady) {
+            setStatus("الاتصال بالجهاز الآخر انقطع. أعد الاتصال ثم جرّب مشاركة الشاشة.");
+            return;
+        }
         try {
             Intent projectionService = new Intent(this, VantaProjectionService.class);
-            projectionService.putExtra("resultCode", resultCode);
-            projectionService.putExtra("data", data);
             if (android.os.Build.VERSION.SDK_INT >= 26) startForegroundService(projectionService);
             else startService(projectionService);
+
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (isFinishing() || isDestroyed() || peer == null || !peerReady) {
+                    setStatus("الاتصال انتهى قبل بدء مشاركة الشاشة");
+                    stopService(new Intent(this, VantaProjectionService.class));
+                    return;
+                }
                 try {
                     screenCapturer = new ScreenCapturerAndroid(data, new MediaProjection.Callback() {
-                        @Override public void onStop() { runOnUiThread(() -> setStatus("توقفت مشاركة الشاشة")); }
+                        @Override public void onStop() {
+                            runOnUiThread(() -> {
+                                setStatus("توقفت مشاركة الشاشة");
+                                stopService(new Intent(MainActivity.this, VantaProjectionService.class));
+                            });
+                        }
                     });
-                    SurfaceTextureHelper helper = SurfaceTextureHelper.create("VANTA-ScreenCapture", eglBase.getEglBaseContext());
+                    captureHelper = SurfaceTextureHelper.create("VANTA-ScreenCapture", eglBase.getEglBaseContext());
                     videoSource = factory.createVideoSource(true);
-                    screenCapturer.initialize(helper, getApplicationContext(), videoSource.getCapturerObserver());
-                } catch (Exception captureError) {
-                    setStatus("تعذر تهيئة تصوير الشاشة: " + captureError.getMessage());
-                }
-            }, 350);
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                try {
-                    if (screenCapturer == null || peer == null) return;
+                    screenCapturer.initialize(captureHelper, getApplicationContext(), videoSource.getCapturerObserver());
                     screenCapturer.startCapture(1280, 720, 15);
                     localVideo = factory.createVideoTrack("vanta-screen", videoSource);
                     peer.addTrack(localVideo, Arrays.asList("vanta-stream"));
                     createOffer();
                     setStatus("مشاركة الشاشة بدأت");
-                } catch (Exception ex) { setStatus("تعذر بدء مشاركة الشاشة: " + ex.getMessage()); }
-            }, 700);
-        } catch (Exception e) { setStatus("تعذر بدء مشاركة الشاشة: " + e.getMessage()); }
+                } catch (Exception captureError) {
+                    setStatus("فشل بدء مشاركة الشاشة: " + captureError.getClass().getSimpleName() + " — " + captureError.getMessage());
+                    closeScreenCapture();
+                }
+            }, 500);
+        } catch (Exception e) {
+            setStatus("تعذر تشغيل خدمة مشاركة الشاشة: " + e.getClass().getSimpleName() + " — " + e.getMessage());
+            closeScreenCapture();
+        }
+    }
+
+    private void closeScreenCapture() {
+        if (screenCapturer != null) {
+            try { screenCapturer.stopCapture(); } catch (Exception ignored) { }
+            try { screenCapturer.dispose(); } catch (Exception ignored) { }
+            screenCapturer = null;
+        }
+        if (captureHelper != null) { captureHelper.dispose(); captureHelper = null; }
+        if (localVideo != null) { localVideo.dispose(); localVideo = null; }
+        if (videoSource != null) { videoSource.dispose(); videoSource = null; }
+        stopService(new Intent(this, VantaProjectionService.class));
     }
 
     private void createOffer() {
@@ -420,7 +479,8 @@ public final class MainActivity extends Activity {
     }
 
     private void closePeer() {
-        if (screenCapturer != null) { try { screenCapturer.stopCapture(); screenCapturer.dispose(); } catch (Exception ignored) { } screenCapturer = null; }
+        if (screenCapturer != null) { try { screenCapturer.stopCapture(); } catch (Exception ignored) { } try { screenCapturer.dispose(); } catch (Exception ignored) { } screenCapturer = null; }
+        if (captureHelper != null) { captureHelper.dispose(); captureHelper = null; }
         if (localVideo != null) { localVideo.dispose(); localVideo = null; }
         if (videoSource != null) { videoSource.dispose(); videoSource = null; }
         if (controlChannel != null) { controlChannel.close(); controlChannel.dispose(); controlChannel = null; }
