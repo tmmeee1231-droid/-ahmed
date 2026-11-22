@@ -157,8 +157,8 @@ jobs:
         run: |
           mkdir -p ~/.gradle/init.d
           cat > ~/.gradle/init.d/maven-mirror.gradle <<'EOF'
-          allprojects {
-              repositories {
+          gradle.beforeSettings { settings ->
+              settings.pluginManagement.repositories {
                   maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
               }
           }
