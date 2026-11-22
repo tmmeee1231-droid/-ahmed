@@ -2,6 +2,7 @@ package com.vanta.remote;
 
 import android.app.Application;
 import android.content.SharedPreferences;
+import android.content.Context;
 import android.util.Log;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -26,14 +27,14 @@ public final class VantaApplication extends Application {
         });
     }
 
-    public static void mark(Application app, String stage) {
+    public static void mark(Context app, String stage) {
         try {
             app.getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(KEY_STAGE, stage).commit();
             Log.i("VANTA-DIAG", stage);
         } catch (Throwable ignored) { }
     }
 
-    public static String previousReport(Application app) {
+    public static String previousReport(Context app) {
         SharedPreferences p = app.getSharedPreferences(PREFS, MODE_PRIVATE);
         String stage = p.getString(KEY_STAGE, "");
         String crash = p.getString(KEY_CRASH, "");
