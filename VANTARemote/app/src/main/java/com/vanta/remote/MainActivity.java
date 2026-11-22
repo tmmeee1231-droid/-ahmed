@@ -71,7 +71,6 @@ public final class MainActivity extends Activity {
             new AlertDialog.Builder(this).setTitle("تشخيص آخر محاولة لمشاركة الشاشة")
                 .setMessage(previousReport).setPositiveButton("حسنًا", null).show();
         }
-        VantaApplication.mark(this, "APP_OPENED");
     }
 
     private void initializeWebRtc() {
