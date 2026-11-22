@@ -850,7 +850,7 @@ class MainService : Service() {
         }
         val notification = notificationBuilder
             .setOngoing(true)
-            .setSmallIcon(R.mipmap.ic_stat_logo)
+            .setSmallIcon(android.R.drawable.stat_sys_download_done)
             .setDefaults(Notification.DEFAULT_ALL)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
