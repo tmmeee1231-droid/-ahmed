@@ -354,14 +354,28 @@ public final class MainActivity extends Activity {
                     peer.addTrack(localVideo, Arrays.asList("vanta-stream"));
                     createOffer();
                     setStatus("مشاركة الشاشة بدأت");
-                } catch (Exception captureError) {
-                    setStatus("فشل بدء مشاركة الشاشة: " + captureError.getClass().getSimpleName() + " — " + captureError.getMessage());
+                } catch (Throwable captureError) {
+                    android.util.Log.e("VANTA-CAPTURE", "Screen capture startup failed", captureError);
+                    setStatus("فشل بدء مشاركة الشاشة: " + captureError.getClass().getSimpleName()
+                        + " — " + String.valueOf(captureError.getMessage()));
                     closeScreenCapture();
+                    new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("تعذر بدء مشاركة الشاشة")
+                        .setMessage(captureError.getClass().getSimpleName() + ": " + String.valueOf(captureError.getMessage()))
+                        .setPositiveButton("حسنًا", null)
+                        .show();
                 }
-            }, 500);
-        } catch (Exception e) {
-            setStatus("تعذر تشغيل خدمة مشاركة الشاشة: " + e.getClass().getSimpleName() + " — " + e.getMessage());
+            }, 800);
+        } catch (Throwable e) {
+            android.util.Log.e("VANTA-CAPTURE", "Could not start projection foreground service", e);
+            setStatus("تعذر تشغيل خدمة مشاركة الشاشة: " + e.getClass().getSimpleName()
+                + " — " + String.valueOf(e.getMessage()));
             closeScreenCapture();
+            new AlertDialog.Builder(this)
+                .setTitle("تعذر تشغيل مشاركة الشاشة")
+                .setMessage(e.getClass().getSimpleName() + ": " + String.valueOf(e.getMessage()))
+                .setPositiveButton("حسنًا", null)
+                .show();
         }
     }
 
