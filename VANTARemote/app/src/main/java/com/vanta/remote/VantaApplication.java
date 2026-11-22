@@ -38,8 +38,9 @@ public final class VantaApplication extends Application {
         SharedPreferences p = app.getSharedPreferences(PREFS, MODE_PRIVATE);
         String stage = p.getString(KEY_STAGE, "");
         String crash = p.getString(KEY_CRASH, "");
-        if ((stage == null || stage.isEmpty()) && (crash == null || crash.isEmpty())) return null;
-        p.edit().remove(KEY_CRASH).commit();
+        boolean captureStage = stage != null && stage.startsWith("CAPTURE_") && !"CAPTURE_OK".equals(stage);
+        p.edit().remove(KEY_STAGE).remove(KEY_CRASH).commit();
+        if (!captureStage && (crash == null || crash.isEmpty())) return null;
         return "آخر مرحلة محفوظة: " + (stage == null || stage.isEmpty() ? "غير محددة" : stage)
             + ((crash == null || crash.isEmpty()) ? "" : "\n\nتفاصيل الخطأ:\n" + crash);
     }
