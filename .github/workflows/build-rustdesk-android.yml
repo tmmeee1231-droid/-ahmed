@@ -59,7 +59,9 @@ jobs:
             openjdk-17-jdk-headless pkg-config tree wget
 
       - name: Install Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
 
       - name: Install Flutter
         uses: subosito/flutter-action@v2
