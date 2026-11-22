@@ -48,6 +48,12 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Restore RustDesk hbb_common dependency
+        shell: bash
+        run: |
+          git clone https://github.com/rustdesk/hbb_common.git libs/hbb_common
+          git -C libs/hbb_common checkout fae47e024dd83cef6aaecde0aa7d11731df11649
+
       - name: Install native build dependencies
         run: |
           sudo apt-get update
