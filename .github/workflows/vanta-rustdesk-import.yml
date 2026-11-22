@@ -1,8 +1,6 @@
 name: Import RustDesk while preserving VANTA server
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
