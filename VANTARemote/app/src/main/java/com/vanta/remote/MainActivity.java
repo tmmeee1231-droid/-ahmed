@@ -66,6 +66,12 @@ public final class MainActivity extends Activity {
         super.onCreate(state);
         initializeWebRtc();
         buildUi();
+        String previousReport = VantaApplication.previousReport(this);
+        if (previousReport != null) {
+            new AlertDialog.Builder(this).setTitle("تشخيص آخر محاولة لمشاركة الشاشة")
+                .setMessage(previousReport).setPositiveButton("حسنًا", null).show();
+        }
+        VantaApplication.mark(this, "APP_OPENED");
     }
 
     private void initializeWebRtc() {
@@ -327,9 +333,11 @@ public final class MainActivity extends Activity {
             return;
         }
         try {
+            VantaApplication.mark(this, "CAPTURE_RESULT_ACCEPTED");
             Intent projectionService = new Intent(this, VantaProjectionService.class);
             if (android.os.Build.VERSION.SDK_INT >= 26) startForegroundService(projectionService);
             else startService(projectionService);
+            VantaApplication.mark(this, "CAPTURE_SERVICE_REQUESTED");
 
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (isFinishing() || isDestroyed() || peer == null || !peerReady) {
@@ -338,6 +346,7 @@ public final class MainActivity extends Activity {
                     return;
                 }
                 try {
+                    VantaApplication.mark(MainActivity.this, "CAPTURE_CREATE_CAPTURER");
                     screenCapturer = new ScreenCapturerAndroid(data, new MediaProjection.Callback() {
                         @Override public void onStop() {
                             runOnUiThread(() -> {
@@ -346,13 +355,21 @@ public final class MainActivity extends Activity {
                             });
                         }
                     });
+                    VantaApplication.mark(MainActivity.this, "CAPTURE_CREATE_HELPER");
                     captureHelper = SurfaceTextureHelper.create("VANTA-ScreenCapture", eglBase.getEglBaseContext());
+                    VantaApplication.mark(MainActivity.this, "CAPTURE_CREATE_VIDEO_SOURCE");
                     videoSource = factory.createVideoSource(true);
+                    VantaApplication.mark(MainActivity.this, "CAPTURE_INITIALIZE_CAPTURER");
                     screenCapturer.initialize(captureHelper, getApplicationContext(), videoSource.getCapturerObserver());
+                    VantaApplication.mark(MainActivity.this, "CAPTURE_START_CAPTURE");
                     screenCapturer.startCapture(1280, 720, 15);
+                    VantaApplication.mark(MainActivity.this, "CAPTURE_CREATE_TRACK");
                     localVideo = factory.createVideoTrack("vanta-screen", videoSource);
+                    VantaApplication.mark(MainActivity.this, "CAPTURE_ADD_TRACK");
                     peer.addTrack(localVideo, Arrays.asList("vanta-stream"));
+                    VantaApplication.mark(MainActivity.this, "CAPTURE_CREATE_OFFER");
                     createOffer();
+                    VantaApplication.mark(MainActivity.this, "CAPTURE_OK");
                     setStatus("مشاركة الشاشة بدأت");
                 } catch (Throwable captureError) {
                     android.util.Log.e("VANTA-CAPTURE", "Screen capture startup failed", captureError);
