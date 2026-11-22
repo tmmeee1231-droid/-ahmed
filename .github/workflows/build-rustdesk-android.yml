@@ -129,7 +129,6 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          sed -i 's/extended_text: 14.0.0/extended_text: 13.0.0/g' flutter/pubspec.yaml
           cd flutter
           flutter pub get
 
