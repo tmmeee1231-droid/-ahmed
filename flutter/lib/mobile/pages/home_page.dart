@@ -73,9 +73,13 @@ class HomePageState extends State<HomePage> {
           return false;
         },
         child: Scaffold(
-          // backgroundColor: MyTheme.grayBg,
+          backgroundColor: const Color(0xFF080708),
           appBar: AppBar(
             centerTitle: true,
+            backgroundColor: const Color(0xFF080708),
+            foregroundColor: const Color(0xFFD62839),
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
             title: appTitle(),
             actions: _pages.elementAt(_selectedIndex).appBarActions,
           ),
@@ -87,8 +91,9 @@ class HomePageState extends State<HomePage> {
                 .toList(),
             currentIndex: _selectedIndex,
             type: BottomNavigationBarType.fixed,
-            selectedItemColor: MyTheme.accent, //
-            unselectedItemColor: MyTheme.darkGray,
+            backgroundColor: const Color(0xFF10090C),
+            selectedItemColor: const Color(0xFFD62839),
+            unselectedItemColor: const Color(0xFF8B777B),
             onTap: (index) => setState(() {
               // close chat overlay when go chat page
               if (_selectedIndex != index) {
@@ -102,7 +107,20 @@ class HomePageState extends State<HomePage> {
               }
             }),
           ),
-          body: _pages.elementAt(_selectedIndex),
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF080708),
+                  Color(0xFF19090F),
+                  Color(0xFF080708),
+                ],
+              ),
+            ),
+            child: _pages.elementAt(_selectedIndex),
+          ),
         ));
   }
 
@@ -150,7 +168,21 @@ class HomePageState extends State<HomePage> {
         ],
       );
     }
-    return Text("𝕄𝔸ℕ𝕎");
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.diamond_outlined, color: Color(0xFFD62839), size: 20),
+        const SizedBox(width: 8),
+        const Text(
+          "𝕄𝔸ℕ𝕎",
+          style: TextStyle(
+            color: Color(0xFFF4E9EB),
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ],
+    );
   }
 }
 
