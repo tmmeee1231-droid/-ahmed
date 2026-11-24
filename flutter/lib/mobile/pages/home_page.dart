@@ -124,7 +124,7 @@ class HomePageState extends State<HomePage> {
               fit: StackFit.expand,
               children: [
                 Opacity(
-                  opacity: 0.34,
+                  opacity: 0.82,
                   child: SvgPicture.asset(
                     [
                       'assets/manw_crown_background.svg',
