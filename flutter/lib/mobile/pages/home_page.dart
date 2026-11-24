@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_hbb/mobile/pages/server_page.dart';
 import 'package:flutter_hbb/mobile/pages/settings_page.dart';
 import 'package:flutter_hbb/web/settings_page.dart';
@@ -119,7 +120,24 @@ class HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            child: _pages.elementAt(_selectedIndex),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Opacity(
+                  opacity: 0.34,
+                  child: SvgPicture.asset(
+                    [
+                      'assets/manw_crown_background.svg',
+                      'assets/manw_hacker_background.svg',
+                      'assets/manw_purple_background.svg',
+                      'assets/manw_moon_background.svg',
+                    ][_selectedIndex % 4],
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                _pages.elementAt(_selectedIndex),
+              ],
+            ),
           ),
         ));
   }
