@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><radialGradient id="bg"><stop stop-color="#301018"/><stop offset="1" stop-color="#050506"/></radialGradient><linearGradient id="mane" x2="1" y2="1"><stop stop-color="#f5d9dc"/><stop offset=".45" stop-color="#8c1828"/><stop offset="1" stop-color="#25070d"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<circle cx="256" cy="256" r="247" fill="url(#bg)" stroke="#e11b32" stroke-width="9"/>
+<circle cx="256" cy="256" r="226" fill="none" stroke="#7e1020" stroke-width="3"/>
+<path d="M256 55 300 100 362 79 381 145 443 176 413 235 451 293 390 330 384 399 318 402 256 458 194 402 128 399 122 330 61 293 99 235 69 176 131 145 150 79 212 100Z" fill="url(#mane)" stroke="#ff233d" stroke-width="8" filter="url(#glow)"/>
+<path d="M166 175 213 133 256 150 299 133 346 175 362 245 333 319 256 365 179 319 150 245Z" fill="#080809" stroke="#d7bfc2" stroke-width="7"/>
+<path d="M177 230 225 211 244 232 213 250Z M335 230 287 211 268 232 299 250Z" fill="#ff1835" filter="url(#glow)"/>
+<path d="M256 238 224 281 256 302 288 281Z" fill="#b51b2d" stroke="#f8dfe2" stroke-width="4"/>
+<path d="M225 315 Q256 343 287 315" fill="none" stroke="#f4d9dc" stroke-width="8" stroke-linecap="round"/>
+<path d="M190 112 211 67 256 99 301 67 322 112" fill="none" stroke="#f4d8dc" stroke-width="13" stroke-linejoin="round"/>
+<path d="M201 111H311" stroke="#e51d36" stroke-width="12"/>
+<text x="256" y="425" text-anchor="middle" font-family="sans-serif" font-size="43" font-weight="900" fill="#fff" stroke="#9f1024" stroke-width="2">مانو</text>
+<text x="256" y="468" text-anchor="middle" font-family="sans-serif" font-size="27" font-weight="900" letter-spacing="5" fill="#ff243d">HACKER</text>
+</svg>
