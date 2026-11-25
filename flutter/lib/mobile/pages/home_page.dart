@@ -124,14 +124,9 @@ class HomePageState extends State<HomePage> {
               fit: StackFit.expand,
               children: [
                 Opacity(
-                  opacity: 0.82,
+                  opacity: 0.13,
                   child: SvgPicture.asset(
-                    [
-                      'assets/manw_crown_background.svg',
-                      'assets/manw_hacker_background.svg',
-                      'assets/manw_purple_background.svg',
-                      'assets/manw_moon_background.svg',
-                    ][_selectedIndex % 4],
+                    'assets/manw_lion_hacker.svg',
                     fit: BoxFit.cover,
                   ),
                 ),
