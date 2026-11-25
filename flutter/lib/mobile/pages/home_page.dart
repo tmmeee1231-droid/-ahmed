@@ -189,14 +189,18 @@ class HomePageState extends State<HomePage> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.diamond_outlined, color: Color(0xFFD62839), size: 20),
+        SizedBox(
+          width: 34,
+          height: 34,
+          child: SvgPicture.asset('assets/manw_lion_hacker.svg'),
+        ),
         const SizedBox(width: 8),
         const Text(
-          "𝕄𝔸ℕ𝕎",
+          "مانو HACKER",
           style: TextStyle(
             color: Color(0xFFF4E9EB),
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.0,
           ),
         ),
       ],
