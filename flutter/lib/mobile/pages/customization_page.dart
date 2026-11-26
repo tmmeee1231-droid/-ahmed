@@ -33,7 +33,7 @@ class AppAppearance {
     if (picked == null) return;
     final dir = await getApplicationDocumentsDirectory();
     await _removeBackgroundFiles(dir);
-    final target = File('\${dir.path}/\$_fileName\${_extension(picked.path)}');
+    final target = File('${dir.path}/$_fileName${_extension(picked.path)}');
     await File(picked.path).copy(target.path);
     background.value = target;
   }
@@ -59,7 +59,7 @@ class AppAppearance {
     final file = background.value;
     if (file != null && await file.exists()) {
       final bytes = await file.readAsBytes();
-      backgroundName = 'background\${_extension(file.path)}';
+      backgroundName = 'background${_extension(file.path)}';
       archive.addFile(ArchiveFile(backgroundName, bytes.length, bytes));
     }
     final manifest = utf8.encode(jsonEncode({
@@ -122,8 +122,8 @@ class AppAppearance {
     }
 
     final ext = name.substring('background'.length);
-    final target = File('\${dir.path}/\$_fileName$ext');
-    final temp = File('\${target.path}.tmp');
+    final target = File('${dir.path}/$_fileName$ext');
+    final temp = File('${target.path}.tmp');
     await temp.writeAsBytes(imageBytes, flush: true);
     await _removeBackgroundFiles(dir);
     await temp.rename(target.path);
