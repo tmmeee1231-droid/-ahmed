@@ -453,7 +453,7 @@ class _CustomizationPageState extends State<CustomizationPage> {
     if (imageBytes.isEmpty) throw Exception('صورة الخلفية فارغة');
     await _removeBackgroundFiles(dir);
     final extension = name.substring('background'.length);
-    final target = File('\${dir.path}/\$_fileName$extension');
+    final target = File(dir.path + Platform.pathSeparator + _fileName + extension);
     await target.writeAsBytes(imageBytes, flush: true);
     background.value = target;
     return true;
