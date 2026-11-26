@@ -173,13 +173,10 @@ jobs:
               }
           }
 
-          // Add the mirror before repositories declared by project build files.
-          // This also covers Flutter's included Gradle build and its compileClasspath.
+          // Add the mirror to buildscript classpaths without changing project
+          // repositories, which may be locked by repositoriesMode settings.
           gradle.beforeProject { project ->
               project.buildscript.repositories {
-                  maven { url centralMirror }
-              }
-              project.repositories {
                   maven { url centralMirror }
               }
           }
