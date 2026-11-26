@@ -146,6 +146,10 @@ class _RemotePageState extends State<RemotePage> with WidgetsBindingObserver {
         .changeCurrentKey(MessageKey(widget.id, ChatModel.clientModeID));
     _blockableOverlayState.applyFfi(gFFI);
     gFFI.imageModel.addCallbackOnFirstImage((String peerId) {
+      // Prioritize input responsiveness on mobile connections.
+      // Users can still select a higher image quality from the session toolbar.
+      unawaited(bind.sessionSetImageQuality(
+          sessionId: sessionId, value: kRemoteImageQualityLow));
       gFFI.recordingModel
           .updateStatus(bind.sessionGetIsRecording(sessionId: gFFI.sessionId));
       if (gFFI.recordingModel.start) {
