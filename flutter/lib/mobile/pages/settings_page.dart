@@ -21,6 +21,7 @@ import '../widgets/deploy_dialog.dart';
 import '../../models/shortcut_model.dart';
 import '../widgets/dialog.dart';
 import 'home_page.dart';
+import 'customization_page.dart';
 import 'mobile_keyboard_shortcuts_page.dart';
 import 'scan_page.dart';
 
@@ -761,6 +762,25 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
                   } else {
                     logOutConfirmDialog();
                   }
+                },
+              ),
+            ],
+          ),
+        if (isAndroid)
+          SettingsSection(
+            title: const Text('المظهر'),
+            tiles: [
+              SettingsTile(
+                title: const Text('تخصيص الشكل'),
+                description: const Text('تغيير خلفية التطبيق بكلمة مرور'),
+                leading: const Icon(Icons.palette_outlined),
+                onPressed: (context) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CustomizationPage(),
+                    ),
+                  );
                 },
               ),
             ],
