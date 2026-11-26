@@ -160,9 +160,27 @@ jobs:
         run: |
           mkdir -p ~/.gradle/init.d
           cat > ~/.gradle/init.d/maven-mirror.gradle <<'EOF'
+          def centralMirror = 'https://maven-central.storage-download.googleapis.com/maven2/'
+
+          // Plugin markers and plugins resolved during settings evaluation.
           gradle.beforeSettings { settings ->
               settings.pluginManagement.repositories {
-                  maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
+                  maven { url centralMirror }
+              }
+              // Dependencies resolved through dependencyResolutionManagement.
+              settings.dependencyResolutionManagement.repositories {
+                  maven { url centralMirror }
+              }
+          }
+
+          // Add the mirror before repositories declared by project build files.
+          // This also covers Flutter's included Gradle build and its compileClasspath.
+          gradle.beforeProject { project ->
+              project.buildscript.repositories {
+                  maven { url centralMirror }
+              }
+              project.repositories {
+                  maven { url centralMirror }
               }
           }
           EOF
