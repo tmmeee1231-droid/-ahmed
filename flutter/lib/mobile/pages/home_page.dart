@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_hbb/mobile/pages/server_page.dart';
@@ -9,6 +11,7 @@ import '../../common/widgets/chat_page.dart';
 import '../../models/platform_model.dart';
 import '../../models/state_model.dart';
 import 'connection_page.dart';
+import 'customization_page.dart';
 
 abstract class PageShape extends Widget {
   final String title = "";
@@ -44,6 +47,7 @@ class HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     initPages();
+    AppAppearance.load();
   }
 
   void initPages() {
@@ -108,30 +112,46 @@ class HomePageState extends State<HomePage> {
               }
             }),
           ),
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF080708),
-                  Color(0xFF19090F),
-                  Color(0xFF080708),
+          body: ValueListenableBuilder<File?>(
+            valueListenable: AppAppearance.background,
+            builder: (context, background, _) => Container(
+              decoration: BoxDecoration(
+                image: background != null && background.existsSync()
+                    ? DecorationImage(
+                        image: FileImage(background),
+                        fit: BoxFit.cover,
+                        colorFilter: ColorFilter.mode(
+                          Colors.black.withOpacity(0.48),
+                          BlendMode.darken,
+                        ),
+                      )
+                    : null,
+                gradient: background == null
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF080708),
+                          Color(0xFF19090F),
+                          Color(0xFF080708),
+                        ],
+                      )
+                    : null,
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (background == null)
+                    Opacity(
+                      opacity: 0.13,
+                      child: SvgPicture.asset(
+                        'assets/manw_lion_hacker.svg',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  _pages.elementAt(_selectedIndex),
                 ],
               ),
-            ),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Opacity(
-                  opacity: 0.13,
-                  child: SvgPicture.asset(
-                    'assets/manw_lion_hacker.svg',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                _pages.elementAt(_selectedIndex),
-              ],
             ),
           ),
         ));
