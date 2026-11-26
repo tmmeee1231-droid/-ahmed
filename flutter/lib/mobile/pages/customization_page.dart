@@ -70,13 +70,15 @@ class AppAppearance {
     archive.addFile(ArchiveFile('manifest.json', manifest.length, manifest));
     final zip = ZipEncoder().encode(archive);
     if (zip == null || zip.isEmpty) throw Exception('تعذر إنشاء ملف التخصيص');
-    return FilePicker.platform.saveFile(
+    final path = await FilePicker.platform.saveFile(
       dialogTitle: 'حفظ نسخة التخصيص',
       fileName: 'VANTA-customization.zip',
       type: FileType.custom,
       allowedExtensions: ['zip'],
-      bytes: zip,
     );
+    if (path == null) return null;
+    await File(path).writeAsBytes(zip, flush: true);
+    return path;
   }
 
   static Future<bool> importCustomization() async {
