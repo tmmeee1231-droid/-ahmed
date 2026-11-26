@@ -62,7 +62,7 @@ class _CustomizationPageState extends State<CustomizationPage> {
 
   void _unlock() {
     setState(() {
-      _unlocked = _passwordController.text == 'manw1231\$\;
+      _unlocked = _passwordController.text == 'manw1231\$\$';
       _wrongPassword = !_unlocked;
     });
   }
@@ -83,128 +83,19 @@ class _CustomizationPageState extends State<CustomizationPage> {
   }
 
   Future<void> _reset() async {
-    await AppAppearance.reset();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تمت استعادة الخلفية الأصلية')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const accent = Color(0xFFD62839);
-    return Scaffold(
-      appBar: AppBar(title: const Text('تخصيص الشكل')),
-      body: SafeArea(
-        child: !_unlocked
-            ? Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.lock_outline, size: 58, color: accent),
-                        const SizedBox(height: 16),
-                        const Text('أدخل كلمة المرور لفتح إعدادات التخصيص'),
-                        const SizedBox(height: 18),
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          onSubmitted: (_) => _unlock(),
-                          decoration: InputDecoration(
-                            labelText: 'كلمة المرور',
-                            errorText: _wrongPassword ? 'كلمة المرور غير صحيحة' : null,
-                            border: const OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _unlock,
-                            child: const Text('دخول'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              )
-            : ListView(
-                padding: const EdgeInsets.all(18),
-                children: [
-                  const Text('خلفية التطبيق',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  ValueListenableBuilder<File?>(
-                    valueListenable: AppAppearance.background,
-                    builder: (context, file, _) => ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        height: 190,
-                        color: Theme.of(context).colorScheme.surface,
-                        alignment: Alignment.center,
-                        child: file != null && file.existsSync()
-                            ? Image.file(file, fit: BoxFit.cover, width: double.infinity)
-                            : const Text('الخلفية الأصلية مفعّلة'),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  ElevatedButton.icon(
-                    onPressed: _busy ? null : _chooseBackground,
-                    icon: const Icon(Icons.photo_library_outlined),
-                    label: Text(_busy ? 'جارٍ فتح المعرض...' : 'اختيار صورة من المعرض'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _busy ? null : _reset,
-                    icon: const Icon(Icons.restart_alt),
-                    label: const Text('استعادة الشكل الأصلي'),
-                  ),
-                  const SizedBox(height: 24),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  const Text('أيقونة التطبيق',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'أندرويد لا يسمح بتبديل أيقونة التطبيق الرئيسية إلى صورة عشوائية من المعرض بعد التثبيت. يمكن استخدام أيقونات بديلة مدمجة داخل APK أو إنشاء اختصار مستقل بصورة تختارها.',
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-}
-;
-      _wrongPassword = !_unlocked;
-    });
-  }
-
-  Future<void> _chooseBackground() async {
-    setState(() => _busy = true);
     try {
-      await AppAppearance.chooseBackground();
+      await AppAppearance.reset();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تمت استعادة الخلفية الأصلية')),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تعذر اختيار الصورة: $e')),
+          SnackBar(content: Text('تعذر استعادة الخلفية: $e')),
         );
       }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _reset() async {
-    await AppAppearance.reset();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تمت استعادة الخلفية الأصلية')),
-      );
     }
   }
 
